@@ -37,7 +37,6 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
- // first
  
 // This sketch code is based on the RPLIDAR driver library provided by RoboPeak
 #include <RPLidar.h>
@@ -47,61 +46,120 @@ RPLidar lidar;
 
 #define RPLIDAR_MOTOR 3 // The PWM pin for control the speed of RPLIDAR's motor.
                         // This pin should connected with the RPLIDAR's MOTOCTRL signal 
-                       
-   float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
-     float angle    = lidar.getCurrentPoint().angle; //anglue value in degree 
-     //void lidar_analysis(float angle);                    
+  #define led 12 
+  #define rled 13                    
+ void printDistance(void);   
+
+ int current =0;
+ int previous = 0;  
+ int flag =0;                 
 void setup() {
   // bind the RPLIDAR driver to the arduino hardware serial
   lidar.begin(Serial);
- Serial.begin(115200);
+  
   // set pin modes
   pinMode(RPLIDAR_MOTOR, OUTPUT);
+  pinMode(led, OUTPUT);
+  pinMode(rled,OUTPUT);
 }
 
-void loop() 
-{
-  if (IS_OK(lidar.waitPoint())) 
-  {
-    float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
-    float dis = ((float(distance))/1000);
-    Serial.print(dis);
-    Serial.println("m");
-    float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
-    Serial.print(lidar.getCurrentPoint().angle);
-    Serial.println("deg");
-   // if(float(angle)>=0 && float(angle)<=45)
-    //{
-    //analogWrite(RPLIDAR_MOTOR, 0);
-     //delay(1000);
-     // lidar.stop();
-      
-    //}
-    
-    bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
-    byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
-    //lidar_analysis();
+void loop() {
+  if (IS_OK(lidar.waitPoint())) {
+         printDistance();
     //perform data processing here... 
+
     
-    
-  } 
-  else 
-  {
+  } else {
+   
     analogWrite(RPLIDAR_MOTOR, 0); //stop the rplidar motor
-     
+    
     // try to detect RPLIDAR... 
     rplidar_response_device_info_t info;
-    if (IS_OK(lidar.getDeviceInfo(info, 100))) 
-    {
+    if (IS_OK(lidar.getDeviceInfo(info, 100))) {
        // detected...
        lidar.startScan();
        
        // start motor rotating at max allowed speed
-       analogWrite(RPLIDAR_MOTOR, 150);
+       analogWrite(RPLIDAR_MOTOR, 255);
        delay(1000);
-     
     }
+  
+}
+}
+void printDistance(void)
+{
+     float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
+     
+    float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
+    bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
+    byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
+     int Condition = 0;
+     static int count = 0;
+      if((angle >= 0)&&(angle<290))
+         {
+           digitalWrite(led,LOW);
+                  digitalWrite(rled,LOW);
+         }
+           
+   else if((angle >= 290)&&(angle<=310))
+       {
+          if((distance >= 1500)&&(distance<=4000))
+            {
+              Condition = 1; 
+            }
+           
+          else if((distance >= 1000) && (distance <=1500))
+            {
+              count++;
+              if(count < 100)
+                {
+                  Condition = 2;
+                }
+              else if(count >=100)
+                {
+                  Condition = 3;
+                }
+              }
+       
+                
+              }
+  
+        
+         
+    switch(Condition)
+        {
+          case 1: 
+              {
+                digitalWrite(led,HIGH);
+                digitalWrite(rled,LOW);
+                Serial.print(distance);
+                Serial.print("mm\t\t");
+                Serial.print(angle);
+                Serial.println("deg");
+                break;
+              }
+         case 2: 
+              {
+                digitalWrite(led,HIGH);
+                digitalWrite(rled,HIGH);
+                Serial.print(distance);
+                Serial.print("mm\t\t");
+                Serial.print(angle);
+                Serial.println("deg");
+                 break; 
+                }
+          case 3:
+                {
+                  digitalWrite(led,LOW);
+                  digitalWrite(rled,LOW); 
+                  Condition =4;
+                  }
+          case 4:
+                {
+                  Serial.print("hi");
+              //count = 0;
+             //flag = 1;
+              }
   }
 }
-
 
