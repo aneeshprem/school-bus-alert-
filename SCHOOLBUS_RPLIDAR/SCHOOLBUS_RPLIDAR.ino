@@ -49,17 +49,20 @@ RPLidar lidar;
                         // This pin should connected with the RPLIDAR's MOTOCTRL signal 
                        
    float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
-     float angle    = lidar.getCurrentPoint().angle; //anglue value in degree                      
+     float angle    = lidar.getCurrentPoint().angle; //anglue value in degree 
+     //void lidar_analysis(float angle);                    
 void setup() {
   // bind the RPLIDAR driver to the arduino hardware serial
   lidar.begin(Serial);
- 
+ Serial.begin(115200);
   // set pin modes
   pinMode(RPLIDAR_MOTOR, OUTPUT);
 }
 
-void loop() {
-  if (IS_OK(lidar.waitPoint())) {
+void loop() 
+{
+  if (IS_OK(lidar.waitPoint())) 
+  {
     float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
     float dis = ((float(distance))/1000);
     Serial.print(dis);
@@ -67,25 +70,29 @@ void loop() {
     float angle    = lidar.getCurrentPoint().angle; //anglue value in degree
     Serial.print(lidar.getCurrentPoint().angle);
     Serial.println("deg");
-    if(float(angle)>=0 && float(angle)<=45)
-    {
-    analogWrite(RPLIDAR_MOTOR, 0);
-     delay(1000);
+   // if(float(angle)>=0 && float(angle)<=45)
+    //{
+    //analogWrite(RPLIDAR_MOTOR, 0);
+     //delay(1000);
      // lidar.stop();
       
-    }
+    //}
+    
     bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
     byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
-    
+    //lidar_analysis();
     //perform data processing here... 
     
     
-  } else {
+  } 
+  else 
+  {
     analogWrite(RPLIDAR_MOTOR, 0); //stop the rplidar motor
      
     // try to detect RPLIDAR... 
     rplidar_response_device_info_t info;
-    if (IS_OK(lidar.getDeviceInfo(info, 100))) {
+    if (IS_OK(lidar.getDeviceInfo(info, 100))) 
+    {
        // detected...
        lidar.startScan();
        
@@ -96,3 +103,5 @@ void loop() {
     }
   }
 }
+
+
