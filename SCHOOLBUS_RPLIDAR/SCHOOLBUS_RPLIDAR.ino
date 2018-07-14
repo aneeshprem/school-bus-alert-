@@ -110,11 +110,11 @@ void printDistance(void)
           else if((distance >= 1000) && (distance <=1500))
             {
               count++;
-              if(count < 500)
+              if(count < 100)
                 {
                   Condition = 2;
                 }
-              else if(count >=500)
+              else if(count >=100)
                 {
                   Condition = 3;
                 }
@@ -135,6 +135,7 @@ void printDistance(void)
                 Serial.print("mm\t\t");
                 Serial.print(angle);
                 Serial.println("deg");
+                count = 0;
                 break;
               }
          case 2: 
@@ -156,12 +157,13 @@ void printDistance(void)
           case 4:
                 {
                   Serial.println("car stopped");
-              //count = 0;
+              
              //flag = 1;
               }
               case 5:{
                 digitalWrite(led,LOW);
                   digitalWrite(rled,LOW);
+                  
               }
   }
 }
