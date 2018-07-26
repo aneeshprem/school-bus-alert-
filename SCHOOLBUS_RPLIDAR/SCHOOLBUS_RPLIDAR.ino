@@ -1,42 +1,27 @@
 /*
- * RoboPeak RPLIDAR Arduino Example
- * This example shows the easy and common way to fetch data from an RPLIDAR
- * 
- * You may freely add your application code based on this template
- *
- * USAGE:
- * ---------------------------------
- * 1. Download this sketch code to your Arduino board
- * 2. Connect the RPLIDAR's serial port (RX/TX/GND) to your Arduino board (Pin 0 and Pin1)
- * 3. Connect the RPLIDAR's motor ctrl pin to the Arduino board pin 3 
+ /*******************************************************************************
+ * File Name          : <CAPSTONE PROJECT>
+ *                      
+ * Description        : <SCHOOL BUS ALERT SYSTEM>
+ *                      A system that can measure the distance of the vehicle 
+ *                      behind or infront of a school bus using a Lidar.If vehicle 
+ *                      crosses the safe distance, the system will alert the children 
+ *                      about the danger with the help of buzzer. It also give indication 
+ *                      to vehicles by using a strobe light.
+ * Author:              <CRYSTEENA ELIZABATH JEROME>
+ *                      <ANEESH PREM>
+ * Date:                <2018-07-26>
+ ******************************************************************************
+ */
+/* Downloaded sketch code from Arduino library
+ * PIN CONNECTION
+ * 1. Connect the RPLIDAR's serial port (RX/TX/GND) to your Arduino board (Pin 0 and Pin1)
+ * 2. Connect the RPLIDAR's motor ctrl pin to the Arduino board pin 3 
+ * 3. Connect LED(instead of strobe light) to pin 12 of Arduino board
+ * 4. Connect buzzer to pin 13 of Arduino board
+ * 5. Connect the RPLIDAR's motor ctrl pin to the Arduino board pin 3 
  */
  
-/* 
- * Copyright (c) 2014, RoboPeak 
- * All rights reserved.
- * RoboPeak.com
- *
- * Redistribution and use in source and binary forms, with or without modification, 
- * are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, 
- *    this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice, 
- *    this list of conditions and the following disclaimer in the documentation 
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY 
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES 
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT 
- * SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- * OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
- * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
  
 // This sketch code is based on the RPLIDAR driver library provided by RoboPeak
 #include <RPLidar.h>
@@ -46,13 +31,17 @@ RPLidar lidar;
 
 #define RPLIDAR_MOTOR 3 // The PWM pin for control the speed of RPLIDAR's motor.
                         // This pin should connected with the RPLIDAR's MOTOCTRL signal 
-  #define led 12 
-  #define rled 13                    
+  #define led 12   // pin to connect LED
+  #define buzzer 13 // Pin to connect the buzzer
+  
+// FUNCTION      : printDistance()
+// DESCRIPTION   : Prints the distance value and checks the 
+//               : different switch coonditions needed for providing alert
+// PARAMETERS    : None
+// RETURNS       : nothing 
+                
  void printDistance(void);   
-
- int current =0;
- int previous = 0;  
- int flag =0;                 
+                
 void setup() {
   // bind the RPLIDAR driver to the arduino hardware serial
   lidar.begin(Serial);
@@ -60,12 +49,12 @@ void setup() {
   // set pin modes
   pinMode(RPLIDAR_MOTOR, OUTPUT);
   pinMode(led, OUTPUT);
-  pinMode(rled,OUTPUT);
+  pinMode(buzzer,OUTPUT);
 }
 
 void loop() {
   if (IS_OK(lidar.waitPoint())) {
-         printDistance();
+         printDistance();     //calls the function 
     //perform data processing here... 
 
     
@@ -86,6 +75,21 @@ void loop() {
   
 }
 }
+
+//  FUNCTION      : printDistance
+//  DESCRIPTION   : It calculates the distance of the detected obstacle according 
+//                  to the conditions in switch staement.Focussed angle is between 
+//                  290 and 310 degrees. The distance range is between 4000mm and 
+//                  0mm. 
+//                  If distance fro the obstacle is between 4000mm and 1500mm, LED   
+//                  turns ON indicating a warning to vehicles.
+//                  If obstacle enters the range of 1500mm to 1000mm, then buzzer  
+//                  will turn ON for alerting children.
+//                  If the obstacle stops the buzzer will turn OFF otherwise it will 
+//                  be ON until the vehicle stops
+//   PARAMETERS    : None
+//   RETURNS       : nothing
+
 void printDistance(void)
 {
      float distance = lidar.getCurrentPoint().distance; //distance value in mm unit
@@ -94,27 +98,27 @@ void printDistance(void)
     bool  startBit = lidar.getCurrentPoint().startBit; //whether this point is belong to a new scan
     byte  quality  = lidar.getCurrentPoint().quality; //quality of the current measurement
      int Condition = 0;
-     static int count = 0;
-      if((angle >= 0)&&(angle<290))
+     static int count = 0; // checking condition if vehicle is still moving
+      if((angle >= 0)&&(angle<290)) // If angle is between 0 and 290 degrees
          {
            Condition = 5;
          }
            
-   else if((angle >= 290)&&(angle<=310))
+   else if((angle >= 290)&&(angle<=310)) // angle between 290 and 310 degrees
        {
-          if((distance >= 1500)&&(distance<=4000))
+          if((distance >= 1500)&&(distance<=4000)) //distance range 4000mm to 1500mm
             {
               Condition = 1; 
             }
            
-          else if((distance >= 1000) && (distance <=1500))
+          else if((distance >= 1000) && (distance <=1500)) //distance range between 1500 and 1000
             {
               count++;
-              if(count < 100)
+              if(count < 500)
                 {
                   Condition = 2;
                 }
-              else if(count >=100)
+              else if(count >=500)
                 {
                   Condition = 3;
                 }
@@ -127,21 +131,20 @@ void printDistance(void)
          
     switch(Condition)
         {
-          case 1: 
+        case 1: 
               {
                 digitalWrite(led,HIGH);
-                digitalWrite(rled,LOW);
+                digitalWrite(buzzer,LOW);
                 Serial.print(distance);
                 Serial.print("mm\t\t");
                 Serial.print(angle);
                 Serial.println("deg");
-                count = 0;
                 break;
               }
          case 2: 
-              {
+               {
                 digitalWrite(led,HIGH);
-                digitalWrite(rled,HIGH);
+                digitalWrite(buzzer,HIGH);
                 Serial.print(distance);
                 Serial.print("mm\t\t");
                 Serial.print(angle);
@@ -151,20 +154,17 @@ void printDistance(void)
           case 3:
                 {
                   digitalWrite(led,LOW);
-                  digitalWrite(rled,LOW); 
+                  digitalWrite(buzzer,LOW); 
                   Condition =4;
-                  }
+                }
           case 4:
                 {
                   Serial.println("car stopped");
-              
-             //flag = 1;
-              }
-              case 5:{
-                digitalWrite(led,LOW);
-                  digitalWrite(rled,LOW);
-                  
-              }
+                }
+          case 5:
+                {
+                  digitalWrite(led,LOW);
+                  digitalWrite(buzzer,LOW);
+                }
   }
 }
-
